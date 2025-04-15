@@ -20,8 +20,8 @@ def get_dataloaders(data_dir):
         transforms=get_transform()
     )
 
-    train_loader = DataLoader(train_dataset, batch_size=4, shuffle=True, num_workers=4, collate_fn=collate_fn)
-    val_loader = DataLoader(val_dataset, batch_size=4, shuffle=False, num_workers=4, collate_fn=collate_fn)
+    train_loader = DataLoader(train_dataset, batch_size=2, shuffle=True, num_workers=4, collate_fn=collate_fn)
+    val_loader = DataLoader(val_dataset, batch_size=2, shuffle=False, num_workers=4, collate_fn=collate_fn)
 
     return train_loader, val_loader
 
@@ -31,7 +31,10 @@ def train_model(model, train_loader, val_loader, device, num_epochs=10, lr=0.005
     model.to(device)
     params = [p for p in model.parameters() if p.requires_grad]
     optimizer = torch.optim.SGD(params, lr=lr, momentum=0.9, weight_decay=0.0005)
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.1)
+    # scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.1)
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
+        optimizer, T_0=1, T_mult=2, eta_min=1e-6
+    )
 
     for epoch in range(num_epochs):
         model.train()
@@ -54,7 +57,7 @@ def train_model(model, train_loader, val_loader, device, num_epochs=10, lr=0.005
             if (i + 1) % 50 == 0 or (i + 1) == len(train_loader):
                 print(f"[Epoch {epoch+1} | Batch {i+1}/{len(train_loader)}] Loss: {losses.item():.4f}")
 
-        scheduler.step()
+        scheduler.step(epoch + i / len(train_loader))
 
         print(f"\n[Epoch {epoch+1} DONE] Total Loss: {epoch_loss:.4f} | Time: {time.time() - start:.2f}s")
 
@@ -67,7 +70,12 @@ if __name__ == "__main__":
     data_dir = "datasets/nycu-hw2-data"
     train_loader, val_loader = get_dataloaders(data_dir)
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = (
+        torch.device("mps") if torch.backends.mps.is_available()
+        else torch.device("cuda") if torch.cuda.is_available()
+        else torch.device("cpu")
+    )
     model = get_faster_rcnn_model(num_classes=11)
+    print(model)
 
     train_model(model, train_loader, val_loader, device, num_epochs=10, lr=0.005)
