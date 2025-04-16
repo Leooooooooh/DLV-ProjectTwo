@@ -1,6 +1,7 @@
 datasets/nycu-hw2-data/*
 .trunk/*
 checkpoints/*.pth
+checkpoints/fasterrcnn_epoch_2.pth
 pred.csv
 pred.json
 .DS_Store
