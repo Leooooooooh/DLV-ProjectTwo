@@ -11,7 +11,7 @@ from models.faster_rcnn import get_faster_rcnn_model
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 NUM_CLASSES = 11  # digits 0-9 + background
 IMAGE_DIR = "datasets/nycu-hw2-data/test"
-CKPT_PATH = "checkpoints/fasterrcnn_epoch_10.pth"
+CKPT_PATH = "checkpoints/fasterrcnn_epoch_2.pth"
 OUTPUT_JSON = "pred.json"
 SCORE_THRESHOLD = 0.5
 # ========================== #

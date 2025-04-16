@@ -38,7 +38,7 @@ def process_all_images(all_image_ids, grouped_preds):
 
         preds_sorted = sorted(preds, key=lambda p: p["bbox"][0])
         digits = [str(p["category_id"] - 1) for p in preds_sorted]
-        number_str = "".join(digits).lstrip("0") or "0"
+        number_str = "".join(digits)#.lstrip("0") or "0"
         result.append((img_id, number_str))
 
     return result
