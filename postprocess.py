@@ -2,15 +2,22 @@
 
 import json
 import csv
+import os
 from collections import defaultdict
 
 PRED_JSON = "pred.json"
 PRED_CSV = "pred.csv"
-CONF_THRESHOLD = 0.5  # Ignore detections below this
+IMAGE_DIR = "datasets/nycu-hw2-data/test"  # adjust if needed
+CONF_THRESHOLD = 0.5
 
 def load_predictions():
     with open(PRED_JSON, "r") as f:
         return json.load(f)
+
+def get_all_image_ids():
+    filenames = sorted(os.listdir(IMAGE_DIR))
+    image_ids = [int(os.path.splitext(fname)[0]) for fname in filenames if fname.endswith(".png")]
+    return sorted(image_ids)
 
 def group_by_image(predictions):
     grouped = defaultdict(list)
@@ -19,23 +26,19 @@ def group_by_image(predictions):
             grouped[pred["image_id"]].append(pred)
     return grouped
 
-def process_image_detections(grouped_preds):
+def process_all_images(all_image_ids, grouped_preds):
     result = []
 
-    for img_id in sorted(grouped_preds.keys()):
-        preds = grouped_preds[img_id]
+    for img_id in all_image_ids:
+        preds = grouped_preds.get(img_id, [])
 
         if not preds:
             result.append((img_id, -1))
             continue
 
-        # Sort by x-coordinate of bbox
         preds_sorted = sorted(preds, key=lambda p: p["bbox"][0])
-        
-        # Subtract 1 from each category_id
         digits = [str(p["category_id"] - 1) for p in preds_sorted]
-
-        number_str = "".join(digits) if digits else "-1"
+        number_str = "".join(digits).lstrip("0") or "0"
         result.append((img_id, number_str))
 
     return result
@@ -51,5 +54,6 @@ def write_csv(rows):
 if __name__ == "__main__":
     predictions = load_predictions()
     grouped = group_by_image(predictions)
-    rows = process_image_detections(grouped)
+    all_image_ids = get_all_image_ids()
+    rows = process_all_images(all_image_ids, grouped)
     write_csv(rows)
