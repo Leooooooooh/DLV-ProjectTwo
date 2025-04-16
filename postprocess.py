@@ -31,7 +31,9 @@ def process_image_detections(grouped_preds):
 
         # Sort by x-coordinate of bbox
         preds_sorted = sorted(preds, key=lambda p: p["bbox"][0])
-        digits = [str(p["category_id"]) for p in preds_sorted]
+        
+        # Subtract 1 from each category_id
+        digits = [str(p["category_id"] - 1) for p in preds_sorted]
 
         number_str = "".join(digits) if digits else "-1"
         result.append((img_id, number_str))
